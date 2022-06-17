@@ -13,22 +13,13 @@ const Banner = () =>{
     const [check,setCheck] = useState(false);
     const [task,setTask] = useState(false);
     const [data,setData] = useState([]);
-    const handleChange = () =>{
-        if(check === false){
-            setCheck(true);
-            setTask(true);
-        }
-        else{
-            setCheck(false);
-            setTask(false);
-        }
-        
-    }
+    
+
      useEffect(()=>{
         async function getAllTodo(){
             try{
                 const data = await axios.get('http://localhost:8000/api/todo')
-                console.log(data.data)
+                
                 setData(data.data);
             }catch(error){
                 console.log("error");
@@ -36,24 +27,48 @@ const Banner = () =>{
         }
         getAllTodo()
      },[])
+     function changeValue(e){
+        setTodo({
+           ...todo,
+           [e.target.name] : e.target.value
+        })
+    }
+    const [refresh,setRefresh] = useState(false);
+    const [del,setDel] = useState(false);
      async function handleSubmit(e){
          e.preventDefault()
             try{
-                await axios.get('http://localhost:8000/api/todo',todo)
-                
+                await axios.post('http://localhost:8000/api/todo',todo)
+                setRefresh(true)
                 
             }catch(error){
                 console.log("error");
             }
         }
-     
-    function changeValue(e){
-         setTodo({
-            ...todo,
-            [e.target.name] : e.target.value
-         })
-     }
-
+     async function handleStatus(e,id){
+        
+         e.preventDefault()
+            try{
+                await axios.put(`http://localhost:8000/api/todo/${id}`,todo)
+                setRefresh(true)
+                
+            }catch(error){
+                console.log("error");
+            }
+        }
+    
+    if(refresh){
+        return <Banner/>
+    }
+    const handleDelete = async id =>{
+        console.log(id);
+        await axios.delete(`http://localhost:8000/api/todo/${id}`)
+        setDel(true);
+    }
+    if(del){
+        return <Banner/>
+    }
+    
     return(
         <Container maxWidth="md" sx={{marginTop:3}}>
             <Paper elevation={3} >
@@ -61,7 +76,7 @@ const Banner = () =>{
                     <Grid item xs={12} sx={{display:"flex",paddingX:4,paddingY:2}}>
                         {/* <form noValidate style={{display:"flex"}}> */}
                         <TextField fullWidth variant="standard" label="Input Here Task" sx={{margin:1.5}} name="task" onChange={(e) => changeValue(e)} ></TextField>
-                        <Button variant="outlined" color="secondary"  sx={{margin:1.5}} onClick={(e) => handleSubmit(e)} >Go</Button>
+                        <Button variant="contained" color="secondary"  sx={{margin:1.5}} onClick={(e) => handleSubmit(e)} >Go</Button>
                         {/* </form> */}
                     </Grid>
                     
@@ -94,21 +109,24 @@ const Banner = () =>{
                         <TableBody>
                             {
                                 data.map((value,index)=>{
+                                   
                                     return(
                                         <TableRow key={index}>
+                                            
                                             <TableCell>{value.id}</TableCell>
                                                 <TableCell>{
-                                    task && <del style={{color:"red"}}>{value.task}</del>
+                                    !value.status && <del style={{color:"red"}}>{value.task}</del>
                                     }
                                     {
-                                        !task && value.task
+                                        value.status && value.task
                                     }
                                     </TableCell>
                                 <TableCell>
                             <FormGroup>
-                             <FormControlLabel
+                             <FormControlLabel  name="status" onChange={(e) => changeValue(e)}
                                control={
-                                 <Switch onChange={() => handleChange()} />
+                                 <Switch onChange={(e) => handleStatus(e,value.id)} checked={!value.status}
+                                 />
                                }
                                
                              />
@@ -116,16 +134,16 @@ const Banner = () =>{
                                 </TableCell>
                                 <TableCell>
                                     {
-                                        check && <CheckOutlinedIcon variant="contained" color="success"/>
+                                        !value.status && <CheckOutlinedIcon variant="contained" color="success"/>
                                         
                                     }
                                     {
-                                        !check && <LinearProgress />
+                                        value.status && <LinearProgress />
                                     }
                                     
                                 </TableCell>
                                 {
-                                    !check && <TableCell><Button><DeleteOutlinedIcon color="error"/></Button></TableCell>
+                                    !check && <TableCell><Button><DeleteOutlinedIcon color="error" onClick={() => handleDelete(value.id)}/></Button></TableCell>
                                 }
                                <TableCell><Button><EditOutlinedIcon color="warning"/></Button></TableCell>
                             </TableRow>

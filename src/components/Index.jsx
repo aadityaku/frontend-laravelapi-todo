@@ -5,7 +5,7 @@ import { Box } from '@mui/system';
 function Index() {
   return (
     <Box sx={{flexGrow:1}} >
-        <AppBar position='static'>
+        <AppBar position='sticky'>
        <Toolbar>
            <IconButton size='large' edge='start' sx={{mr:2}}>
                 <MenuIcon/>
